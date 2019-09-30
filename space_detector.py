@@ -7,20 +7,20 @@ from sklearn.externals import joblib
 cv2.setNumThreads(1)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-video_writer = cv2.VideoWriter('space_output.avi', fourcc, 1.0, (1200,1000))
+video_writer = cv2.VideoWriter('space_output.avi', fourcc, 1.0, (600,600))
 
 num = 1
 
-classifier = joblib.load('saved_model2.pkl') 
+classifier = joblib.load('saved_model_3.pkl')
 classes = {0:'Empty',1:'Up',2:'Down'}
 
 def Detector(image, space, up=True):
+    _image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     for s in space:
         (x1, y1), (x2, y2) = s
-        space_crop = image[y1:y2, x1:x2]
-        space_crop = cv2.cvtColor(space_crop,cv2.COLOR_BGR2GRAY)
-        space_crop = cv2.resize(space_crop, (90, 180))
+        space_crop = _image[y1:y2, x1:x2]
+        space_crop = cv2.resize(space_crop, (40, 80))
 
         """ Classify """
         input_x = space_crop.flatten()
@@ -30,10 +30,14 @@ def Detector(image, space, up=True):
 
         text = "Empty" if out[0]==0 else "Occupy"
 
+        color = (0, 255, 0) if out[0] == 0 else (0, 0, 255)
+
         if up:
-            image = cv2.putText(image, text, (x1+80, y2+80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0), thickness=4)    
+            image = cv2.rectangle(image, (x1 + 50, y2 + 20), (x1 + 320, y2 + 120), color, -1)
+            image = cv2.putText(image, text, (x1 + 80, y2 + 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=4)
         else:
-            image = cv2.putText(image, text, (x1+80, y1-80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0), thickness=4)    
+            image = cv2.rectangle(image, (x1 + 50, y1 - 60), (x1 + 320, y1 - 160), color, -1)
+            image = cv2.putText(image, text, (x1 + 80, y1 - 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=4)
 
     return image
 
@@ -72,7 +76,7 @@ for compose in range(num_images): # 몇 장이나 합성을 할 것인지 설정
         img_background = cv2.rectangle(img_background, s, e, (255, 0, 0), 3)    
 
     for s, e in lower_space:
-        img_background = cv2.rectangle(img_background, s, e, (0, 0, 255), 3)    
+        img_background = cv2.rectangle(img_background, s, e, (255, 0, 0), 3)
 
 
     for v in range(num_vehicle):
@@ -115,23 +119,25 @@ for compose in range(num_images): # 몇 장이나 합성을 할 것인지 설정
         img_add_vehicle[y_offset_s:y_offset_e, x_offset_s:x_offset_e] = np.where( img_vehicle_crop < 230 , img_vehicle_crop, img_background[y_offset_s:y_offset_e, x_offset_s:x_offset_e] )
 
 
+    cv2.imshow("input", cv2.resize(img_add_vehicle, (600, 600)))
     """ vehicle detect """
     t0 = time.time()
     img_detected = Detector(img_add_vehicle, upper_space, up=True)
     img_detected = Detector(img_detected, lower_space, up=False)
     t1 = time.time()
 
-    img_detected = cv2.resize(img_detected, (1200, 800))
+    img_detected = cv2.resize(img_detected, (600, 600))
     img_detected = cv2.putText(img_detected, "FPS : %d" % (1/(t1-t0)), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), thickness=3) 
 
     cv2.imshow("out", img_detected)
-    video_writer.write(img_detected)
+    if compose > 0:
+        video_writer.write(img_detected)
 
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
 
 cv2.destroyAllWindows()
-out.close()
+video_writer.release()
 
 print("\ndone")
 

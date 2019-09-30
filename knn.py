@@ -12,6 +12,7 @@ def load_DB():
 
     for i in range(150):
         img = cv2.imread(img_path % (i+1), cv2.IMREAD_GRAYSCALE)
+        img = cv2.resize(img, (40, 80))
         imgs.append(img.flatten())
 
     labels = np.array(labels)
@@ -51,22 +52,23 @@ k_range = range(1,26)
 scores = {}
 scores_list = []
 for k in k_range:
-        knn = KNeighborsClassifier(n_neighbors=k)
+        knn = KNeighborsClassifier(n_neighbors=k, algorithm='kd_tree')
         knn.fit(X_train,y_train)
         y_pred=knn.predict(X_test)
         scores[k] = metrics.accuracy_score(y_test,y_pred)
         scores_list.append(metrics.accuracy_score(y_test,y_pred))
 
-print(scores)
+for i in scores.items():
+    print(i)
 
-knn = KNeighborsClassifier(n_neighbors=1)
+knn = KNeighborsClassifier(n_neighbors=1, algorithm='kd_tree')
 knn.fit(X,y)
 print(knn.score(X, y))
 
 
 from sklearn.externals import joblib
 # Output a pickle file for the model
-joblib.dump(knn, 'saved_model2.pkl') 
+joblib.dump(knn, 'saved_model_kd.pkl')
 
 
 #0 = setosa, 1=versicolor, 2=virginica
