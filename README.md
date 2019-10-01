@@ -3,11 +3,11 @@
 
 ### How to use?
 ~~~
-# for head estimation
+# for heading estimation
 python3 Heading_estimation.py
 
 # for empty space recognition
-python Empty_space_recognition.py
+python3 Empty_space_recognition.py
 ~~~
 
 
