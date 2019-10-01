@@ -15,7 +15,7 @@ python3 Empty_space_recognition.py
 
 os : Ubuntu 16.04.2 LTS
 
-GPU : GeForce GTX 780 (3GB)
+GPU : GeForce GTX 970M (3GB)
 
 Python : 3.5.2
 
