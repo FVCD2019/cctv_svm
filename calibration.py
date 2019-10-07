@@ -1,10 +1,3 @@
-import argparse
-import numpy as np
-from network.resnet import *
-import cv2
-import matplotlib.pyplot as plt
-import scipy.misc as m
-import time
 '''
 img = cv2.imread("C:/Users/user/Desktop/tile3.jpg")
 cv2.waitKey(0)
@@ -27,16 +20,18 @@ plt.show()
 plt.imshow(newimg)
 plt.show()
 '''
-
-
 import cv2
-#assert cv2.__version__[0] == '3', 'The fisheye module requires opencv version >= 3.0.0'
 import numpy as np
 import os
 import glob
-import sys
-import matplotlib.pyplot as plt
-mat_path = "D:/19년 2학기/창시구/calibration/%s"
+import time
+
+from threading import Thread
+from queue import Queue
+
+import imutils
+
+mat_path = "%s"
 
 if not os.path.exists(mat_path % ("img_points.npy")) or \
         not os.path.exists(mat_path % ("obj_points.npy")) or \
@@ -50,9 +45,11 @@ if not os.path.exists(mat_path % ("img_points.npy")) or \
     objp = np.zeros((1, CHECKERBOARD[0]*CHECKERBOARD[1], 3), np.float32)
     objp[0,:,:2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
     _img_shape = None
+
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
-    images = glob.glob('C:/Users/user/Desktop/check/Webcam/Webcam/*.jpg')
+    images = glob.glob('/home/siit/Pictures/Webcam/*.jpg')
+
     for fname in images:
         img = cv2.imread(fname)
         if _img_shape == None:
@@ -85,11 +82,6 @@ if not os.path.exists(mat_path % ("img_points.npy")) or \
             calibration_flags,
             (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6)
         )
-    print("Found " + str(N_OK) + " valid images for calibration")
-    print("DIM=" + str(_img_shape[::-1]))
-    print("K=np.array(" + str(K.tolist()) + ")")
-    print("D=np.array(" + str(D.tolist()) + ")")
-
     # You should replace these 3 lines with the output in calibration step
     DIM = _img_shape[::-1]
     K = np.array(K.tolist())
@@ -101,58 +93,100 @@ if not os.path.exists(mat_path % ("img_points.npy")) or \
     np.save(mat_path%("K.npy"), K)
     np.save(mat_path%("D.npy"), D)
 
+
+
+class FileVideoStream:
+    def __init__(self, path, queueSize=128):
+        # initialize the file video stream along with the boolean
+        # used to indicate if the thread should be stopped or not
+        self.stream = cv2.VideoCapture(path)
+        self.stopped = False
+
+        # initialize the queue used to store frames read from
+        # the video file
+        self.Q = Queue(maxsize=queueSize)
+
+
+def start(self):
+    # start a thread to read frames from the file video stream
+    t = Thread(target=self.update, args=())
+    t.daemon = True
+    t.start()
+    return self
+
+
+def update(self):
+    # keep looping infinitely
+    while True:
+        # if the thread indicator variable is set, stop the
+        # thread
+        if self.stopped:
+            return
+
+        # otherwise, ensure the queue has room in it
+        if not self.Q.full():
+            # read the next frame from the file
+            (grabbed, frame) = self.stream.read()
+
+            # if the `grabbed` boolean is `False`, then we have
+            # reached the end of the video file
+            if not grabbed:
+                self.stop()
+                return
+
+            # add the frame to the queue
+            self.Q.put(frame)
+
+
+def read(self):
+    # return next frame in the queue
+    return self.Q.get()
+
+def more(self):
+    # return True if there are still frames in the queue
+    return self.Q.qsize() > 0
+
+def stop(self):
+    # indicate that the thread should be stopped
+    self.stopped = True
+
+
+from imutils.video import FileVideoStream
+
 imgpoints = np.load(mat_path % ("img_points.npy"))
 objpoints = np.load(mat_path % ("obj_points.npy"))
 DIM = np.load(mat_path % ("DIM.npy"))
 K = np.load(mat_path % ("K.npy"))
 D = np.load(mat_path % ("D.npy"))
 
-print("DIM=",DIM)
-print("K:",K)
-print("D:",D)
+map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, tuple(DIM), cv2.CV_16SC2)
 
-def undistort(img_path):
-    img = cv2.imread(img_path)
-    h,w = img.shape[:2]
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, tuple(DIM), cv2.CV_16SC2)
+
+def undistort(img):
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    undistorted_img = cv2.resize(undistorted_img, (1280, 720))
-    plt.imshow(undistorted_img)
-    plt.show()
-    #cv2.imshow("undistorted", undistorted_img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-#if __name__ == '__main__':
-
-undistort("C:/Users/user/Desktop/tiles/tile3.jpg")
+    return undistorted_img
 
 
+print("[INFO] starting video file thread...")
+fvs = FileVideoStream(1).start()
 
-'''
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
+# loop over frames from the video file stream
+while fvs.more():
+    t1 = time.time()
 
-img = cv2.imread("/home/siit/Desktop/tile.jpg")
+    frame = fvs.read()
+    frame = imutils.resize(frame, width=1920)
 
-pts1 = np.float32([[450,150],[10,1900],[3000,120],[3300,1900]])
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    undistorted_img = undistort(frame)
 
-# 좌표의 이동점
-pts2 = np.float32([[10,10],[10,3000],[3000,10],[3000,3000]])
+    t2 = time.time()
 
-# pts1의 좌표에 표시. perspective 변환 후 이동 점 확인.
-cv2.circle(img, (450,150), 50, (255,0,0),-1)
-cv2.circle(img, (10,1900), 50, (0,255,0),-1)
-cv2.circle(img, (3000,120), 50, (0,0,255),-1)
-cv2.circle(img, (3300,1900), 50, (0,0,0),-1)
+    print("FPS : ", 1 / (t2-t1))
 
-M = cv2.getPerspectiveTransform(pts1, pts2)
+    # show the frame and update the FPS counter
+    cv2.imshow("Frame", undistorted_img)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-dst = cv2.warpPerspective(img, M, (3100,3100))
 
-plt.imshow(img),plt.title('image')
-plt.show()
-plt.imshow(dst),plt.title('Perspective')
-plt.show()
-'''
