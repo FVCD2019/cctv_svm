@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="cctv_svm"	type="calibration.py"	name="cam_cali" />
+</launch>
