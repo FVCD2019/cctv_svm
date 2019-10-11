@@ -7,6 +7,9 @@
 
 ### How to use?
 ~~~
+# for camera calibration
+roslaunch cctv_svm calibration.launch
+
 # for heading estimation
 python3 Heading_estimation.py
 
