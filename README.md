@@ -11,6 +11,9 @@
 # for camera calibration
 roslaunch cctv_svm calibration.launch
 
+# for ipm
+roslaunch cctv_svm ipm.launch
+
 # for heading estimation
 python3 Heading_estimation.py
 
@@ -38,8 +41,12 @@ Opencv : 3.4.0
 |saved_model_3.pkl   |pre-trained KNN classifier                |
 |detector.py         |Vehicle & Empty space Detection                           |
 
-### output
+### topic
 ~~~
 # calibration
-rostopic : /distort_cam0, /distort_cam1, /distort_cam2
+publish : /distort_cam0, /distort_cam1
+
+# ipm
+subscribe : /distort_cam0, /distort_cam1
+publish : /ipm0, /ipm1
 ~~~
