@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="cctv_svm"	type="IPM.py"	name="ipm" />
+</launch>
