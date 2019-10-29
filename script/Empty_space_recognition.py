@@ -31,9 +31,10 @@ class PSPACE:
         upper_space = [[(100 + 400 * i, 100), (500 + 400 * i, 900)] for i in range(6)]
         lower_space = [[(100 + 400 * i, 2200), (500 + 400 * i, 3000)] for i in range(4)]
 
-        num_images = 50
-        max_vehicle = 4
-
+        pre_defined_space = upper_space + lower_space # list index is space_id
+        
+        #num_images = 50
+        #max_vehicle = 4
         # for compose in range(num_images):
         #
         #     print("[%03d / %03d]" % (compose, num_images), end='\r')
@@ -41,24 +42,16 @@ class PSPACE:
         #     img_space = space_generator(max_vehicle, upper_space, lower_space)
         #
         #     cv2.imshow("input", cv2.resize(img_space, (600, 600)))
-        """ vehicle detect """
-        t0 = time.time()
-        p_detected_img = Space_Detector(ipm_image0, upper_space, up=True)
-        p_detected_img = Space_Detector(p_detected_img, lower_space, up=False)
-        t1 = time.time()
 
-        p_detected_img = cv2.resize(p_detected_img, (600, 600))
-        p_detected_img = cv2.putText(p_detected_img, "FPS : %d" % (1 / (t1 - t0)), (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                                   1,
-                                   (0, 0, 0), thickness=3)
-        cv2.imshow("out", p_detected_img)
+        """ empty space recognition """
+        empty_space_ids = Space_Detector(ipm_image0, pre_defined_space)
+        
+        # this is for local ryu
         self.pspace_info.data = []
 
         self.image_pub.publish(self.bridge.cv2_to_imgmsg(p_detected_img,"bgr8"))
         self.pspace_pub.publish(args, kwds)
-        if cv2.waitKey(100) & 0xFF == ord('q'):
-            break
-
+        
 
 
 """ video writer """
