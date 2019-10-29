@@ -1,3 +1,3 @@
 <launch>
-	<node pkg="cctv_svm"	type="IPM.py"	name="ipm" />
+	<node pkg="cctv_svm"	type="IPM.py"	name="ipm" output="screen"/>
 </launch>

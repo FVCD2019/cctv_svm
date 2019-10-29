@@ -107,4 +107,3 @@ def Space_Detector(image, space, up=True):
             image = cv2.putText(image, text, (x1 + 80, y1 - 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=4)
 
     return image
-

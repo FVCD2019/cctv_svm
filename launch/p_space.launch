@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="cctv_svm" type="Empty_space_recognition.py" name="p_space" output="screen"/>
+</launch>

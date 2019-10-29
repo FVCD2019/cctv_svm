@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="cctv_svm" type="stitching.py" name="stitching" output="screen"/>
+</launch>

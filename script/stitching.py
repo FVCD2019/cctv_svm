@@ -18,28 +18,30 @@ class STITCHING:
         self.image_pub = rospy.Publisher("stitch",Image,queue_size=1)
         self.image_sub0 = rospy.Subscriber("/ipm0", Image, self.imageCB0)
         self.image_sub1 = rospy.Subscriber("/ipm1", Image, self.imageCB1)
-        self.cb1 = False
-        self.cb2 = False
+        self.cb1 = 0
+        self.cb2 = 0
 
     def imageCB0(self, data):
         try:
             self.ipm_image0 = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.cb1 = True
+            self.cb1 = 1
+            #cv2.imshow("ipm", self.ipm_image0)
+            #cv2.waitKey(3)
         except CvBridgeError as e:
             print(e)
-            self.cb1 = False
+            self.cb1 = 0
 
     def imageCB1(self, data):
         try:
             self.ipm_image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.cb2 = True
+            self.cb2 = 1
         except CvBridgeError as e:
             print(e)
-            self.cb2 = False
+            self.cb2 = 0
 
     def dostitching(self):
         while not rospy.is_shutdown():
-            if self.cb1 == True and self.cb2 == True:
+            if (self.cb1 == 1) and (self.cb2 == 1):
                 self.image_stitch = cv2.addWeighted(self.ipm_image0, 0.5, self.ipm_image1, 0.5, 0)
                 cv2.resize(self.image_stitch, (width, height))
                 self.image_pub.publish(self.bridge.cv2_to_imgmsg(self.image_stitch,"bgr8"))
@@ -48,4 +50,5 @@ class STITCHING:
 
 ########MAIN#######
 stitch = STITCHING()
+time.sleep(1)
 stitch.dostitching()
