@@ -81,29 +81,22 @@ def Vehicle_Detector(image):
     return image
 
 
-def Space_Detector(image, space, up=True):
+def Space_Detector(image, space):
     _image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    for s in space:
+    empty_sace_ids = []
+    
+    for idx, s in enumerate(space):
         (x1, y1), (x2, y2) = s
-        space_crop = _image[y1:y2, x1:x2]
-        space_crop = cv2.resize(space_crop, (40, 80))
+        space_crop = _image[y1:y2, x1:x2]  # space cropping
+        space_crop = cv2.resize(space_crop, (40, 80))  # resize to classifier input size
 
         """ Classify """
         input_x = space_crop.flatten()
 
         out = classifier.predict(input_x[None, :])
 
-        text = "Empty" if out[0]==0 else "Occupy"
-        print(out[0], text)
-
-        color = (0, 255, 0) if out[0] == 0 else (0, 0, 255)
-
-        if up:
-            image = cv2.rectangle(image, (x1 + 50, y2 + 20), (x1 + 320, y2 + 120), color, -1)
-            image = cv2.putText(image, text, (x1 + 80, y2 + 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=4)
-        else:
-            image = cv2.rectangle(image, (x1 + 50, y1 - 60), (x1 + 320, y1 - 160), color, -1)
-            image = cv2.putText(image, text, (x1 + 80, y1 - 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), thickness=4)
-
-    return image
+        if out[0] == 0:  # 0 means empty , 1 and 2 mean occupy
+            empty_space_ids.append(idx)
+        
+    return empty_space_ids
