@@ -19,7 +19,7 @@ def load_DB():
     imgs = np.array(imgs)
 
     return imgs, labels
-    
+
 
 X, y = load_DB()
 
@@ -45,7 +45,7 @@ print(y_test.shape)
 #import the KNeighborsClassifier class from sklearn
 from sklearn.neighbors import KNeighborsClassifier
 
-#import metrics model to check the accuracy 
+#import metrics model to check the accuracy
 from sklearn import metrics
 #Try running from k=1 through 25 and record testing accuracy
 k_range = range(1,26)
@@ -68,13 +68,13 @@ print(knn.score(X, y))
 
 from sklearn.externals import joblib
 # Output a pickle file for the model
-joblib.dump(knn, 'saved_model_kd.pkl')
+joblib.dump(knn, 'saved_model_kd.pkl', protocol=2)
 
 
 #0 = setosa, 1=versicolor, 2=virginica
 classes = {0:'Empty',1:'Up',2:'Down'}
 
-#Making prediction on some unseen data 
+#Making prediction on some unseen data
 #predict for the below two random observations
 x_new = X[0:5]
 print(x_new.shape)

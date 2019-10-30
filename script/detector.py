@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import time
 import cv2
 import numpy as np
@@ -5,7 +6,7 @@ from sklearn.externals import joblib
 
 
 """ load KNN classifier """
-classifier = joblib.load('saved_model_3.pkl')
+classifier = joblib.load('/home/ryu/catkin_ws/src/FVCD/cctv_svm/model/saved_model_3.pkl')
 classes = {0:'Empty',1:'Up',2:'Down'}
 
 
@@ -85,7 +86,7 @@ def Space_Detector(image, space):
     _image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     empty_sace_ids = []
-    
+
     for idx, s in enumerate(space):
         (x1, y1), (x2, y2) = s
         space_crop = _image[y1:y2, x1:x2]  # space cropping
@@ -98,5 +99,5 @@ def Space_Detector(image, space):
 
         if out[0] == 0:  # 0 means empty , 1 and 2 mean occupy
             empty_space_ids.append(idx)
-        
+
     return empty_space_ids

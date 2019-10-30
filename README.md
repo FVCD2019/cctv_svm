@@ -1,5 +1,9 @@
 # cctv_svm
 
+### Required
+ROS
+python-sklearn
+
 ### Calibration
 * [python opencv calibration tutorial](https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html)
 * [opencv calibration docs](https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html)
