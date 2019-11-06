@@ -79,7 +79,7 @@ def Vehicle_Detector(image):
 
         image = cv2.putText(image, "heading : %d" % (angle), tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), thickness=2)
 
-    return image
+   return image, rect_list, center_x, center_y, angle
 
 
 def Space_Detector(image, space):
