@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import time
 import cv2
 import numpy as np
 from sklearn.externals import joblib
-
+#import joblib
 
 """ load KNN classifier """
-classifier = joblib.load('/home/ryu/catkin_ws/src/FVCD/cctv_svm/model/saved_model_3.pkl')
+classifier = joblib.load('/home/ryu/catkin_ws/src/FVCD/cctv_svm/model/saved_model_python2.pkl')
 classes = {0:'Empty',1:'Up',2:'Down'}
 
 

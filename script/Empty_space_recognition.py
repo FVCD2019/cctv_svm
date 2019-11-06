@@ -19,12 +19,18 @@ class PSPACE:
         self.image_sub = rospy.Subscriber("/stitch", Image, self.imageCB)
         self.pspace_info = Int16MultiArray()
         self.pspace_info.data = []
+        self.ps_id = 0
+        self.ps_x = 0
+        self.ps_y = 0
 
     def imageCB(self, data):
+        print("cb")
         try:
             stitch_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            print("cb1")
         except CvBridgeError as e:
             print(e)
+            print("cb2")
 
         """ pre-defined space location """
         upper_space = [[(100 + 400 * i, 100), (500 + 400 * i, 900)] for i in range(6)]
@@ -44,10 +50,15 @@ class PSPACE:
 
         """ empty space recognition """
         empty_space_ids = Space_Detector(stitch_image, pre_defined_space)
+        self.ps_id = empty_space_ids+1
+        self.ps_x = pre_defined_space[empty_space_ids][0]
+        self.ps_y = pre_defined_space[empty_space_ids][1]
 
         # this is for local ryu
-        self.pspace_info.data = [empty_space_ids+1, pre_defined_space[empty_space_ids][0], pre_defined_space[empty_space_ids][1]]
-        self.pspace_pub.publish(self.pspace_info)
+        self.pspace_info.data = [self.ps_id, self.ps_x, self.ps_y]
+        print("pub")
+        #self.pspace_pub.publish(self.pspace_info)
 
 ###########MAIN############
 pspace = PSPACE()
+time.sleep(1)
