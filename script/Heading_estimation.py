@@ -6,15 +6,13 @@ from detector import Vehicle_Detector
 
 a = np.pi/180
 
-
-
-
 """ video writer """
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 video_writer = cv2.VideoWriter('vehicle_output.avi', fourcc, 1.0, (600, 600))
 
 num_images = 50
 max_vehicle = 2
+revised_car_center=np.array([0,0])
 
 for compose in range(num_images):
 
@@ -57,26 +55,26 @@ for i in range(4):
         min_1[0] = dis[i]
         min_1[1] = i
         
-print("rect : ", rect)
-print("dis : ", dis)
-print("min_1 : ", min_1) # rect[min_1[1]] -> the coordinate of point which is fisrtly closest point from camera center
+#print("rect : ", rect)
+#print("dis : ", dis)
+#print("min_1 : ", min_1) # rect[min_1[1]] -> the coordinate of point which is fisrtly closest point from camera center
 
 car_center = [car_center_x, car_center_y] # car center (not revised)
 revised_car_center = [0,0]
 
-print("headingangle :", headingangle)
+#print("headingangle :", headingangle)
 Rotation = np.array([[math.cos(a*headingangle), -math.sin(a*headingangle)],[math.sin(a*headingangle), math.cos(a*headingangle)]])
-print("Rotation : ", Rotation)
+#print("Rotation : ", Rotation)
 ori_mat = np.array([[60, 60, -60, -60], [118, -118, 118, -118]])
 o_x = rect[min_1[1],0]
 o_y = rect[min_1[1],1]
 c_x = car_center_x
 c_y = car_center_y
 ori_point = np.array([[o_x,o_x,o_x,o_x],[o_y,o_y,o_y,o_y]])
-print("The minimum distance point is : ", [o_x, o_y])
+#print("The minimum distance point is : ", [o_x, o_y])
 
 new_mat = np.matmul(Rotation,ori_mat)+ori_point
-print("The 4 candidate center point are : ", new_mat) # 1row is x point, 2row is y point
+#print("The 4 candidate center point are : ", new_mat) # 1row is x point, 2row is y point
 cen_mat = np.array([[c_x,c_x,c_x,c_x],[c_y,c_y,c_y,c_y]])
 dis_mat = new_mat - cen_mat
 dis_mat = np.matmul(np.transpose(dis_mat), dis_mat)
@@ -87,8 +85,8 @@ for i in range(4):
     if(dis_mat[i,i] == min):
         idx = i
 
-print("car_center : ", car_center_x, car_center_y)
-print("revised_car_center is : ", new_mat[0,idx], new_mat[1,idx])
-print("GT_car_center : ", 211, 433, "and ", 991.3, 460.1)
-print("rect : ", rect)
-print("\ndone")
+#print("car_center : ", car_center_x, car_center_y
+revised_car_center=np.array([new_mat[0,idx], new_mat[1,idx])
+#print("GT_car_center : ", 211, 433, "and ", 991.3, 460.1)
+#print("rect : ", rect)
+#print("\ndone")
