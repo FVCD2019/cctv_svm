@@ -18,7 +18,7 @@ width, height = 1300, 1200
 # IPM_matrix = [cv2.getPerspectiveTransform(src_pts[n-1], dst_pts) for n in range(1, 5)]
 
 class IPM:
-    IPM_matrix = []
+    #IPM_matrix = []
     def __init__(self):
         print("init")
         rospy.init_node('ipm', anonymous=True)
