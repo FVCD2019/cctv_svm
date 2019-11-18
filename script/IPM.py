@@ -33,8 +33,8 @@ class IPM:
         self.dst_pts = np.float32([[111, 5], [111, 315], [111, 815], [111, 1125], [1011, 5], [1011, 315], [651, 815], [651, 1125]])
         
 	#self.IPM_matrix = [cv2.getPerspectiveTransform(self.src_pts[n-1], self.dst_pts) for n in range(1, 5)]
-	self.IPM_matrix_0, mask = cv2.findHomography(src_pts0, dst_pts)
-	self.IPM_matrix_1, mask = cv2.findHomography(src_pts1, dst_pts)
+	self.IPM_matrix_0, mask = cv2.findHomography(self.src_pts0, self.dst_pts)
+	self.IPM_matrix_1, mask = cv2.findHomography(self.src_pts1, self.dst_pts)
 
 
     def ipmCB0(self, data):
@@ -72,7 +72,6 @@ class IPM:
         except KeyboardInterrupt:
             print("Shutting down")
         cv2.destroyAllWindows()
-
 
 
 ###########main#
