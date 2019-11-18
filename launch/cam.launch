@@ -3,7 +3,7 @@
     <param name="video_device" value="/dev/video2" />
     <param name="image_width" value="1920" />
     <param name="image_height" value="1080" />
-    <param name="pixel_format" value="mjpeg" />
+    <param name="pixel_format" value="yuyv" />
     <param name="camera_frame_id" value="usb_cam" />
     <param name="io_method" value="mmap"/>
     <param name="autofocus" value="false"/>
@@ -15,7 +15,7 @@
     <param name="video_device" value="/dev/video1" />
     <param name="image_width" value="1920" />
     <param name="image_height" value="1080" />
-    <param name="pixel_format" value="mjpeg" />
+    <param name="pixel_format" value="yuyv" />
     <param name="camera_frame_id" value="usb_cam" />
     <param name="io_method" value="mmap"/>
     <param name="autofocus" value="false"/>
@@ -24,8 +24,5 @@
     <param name="auto_white_balance" value="false"/>
     <param name="white_balance" value="3500"/>
     <remap from="usb_cam2/image_raw" to="cam1"/>
- </node>
-	<node pkg="cctv_svm"	type="calibration.py"	name="cam_cali" output="screen"/>
-	<node pkg="cctv_svm"	type="IPM.py"	name="ipm" output="screen"/>
-	<!--node pkg="cctv_svm"    type="stitching.py" name="stitching" output="screen"/-->
+  </node>
 </launch>
