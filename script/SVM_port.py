@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import time
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge,CvBridgeError
+from std_msgs.msg import Float32MultiArray
 
 img_size = (1920, 1080)
 w, h = 361, 721
@@ -38,7 +39,7 @@ class SVM:
         except CvBridgeError as e:
             print(e)
 
-    def pose(self, data):  #detector pose 규칙 정해지면 수정필요
+    def pose(self, data):  #detector pose need to be modified
         self.ego_x = data[0]
         self.ego_y = data[1]
         self.theta = data[2]
@@ -46,11 +47,11 @@ class SVM:
         self.car_center = np.array([[self.ego_x], [self.ego_y]])
         self.Rotation = np.array([[math.cos((360 - self.theta)*k), -math.sin((360 - self.theta)*k)],[math.sin((360 - self.theta)*k), math.cos((360 - self.theta)*k)]])
 
-        self.cen_trans = self.car_center - trans # translation image 의 중심을 원점(0,0)으로 했을 때 차량 중심의 좌표 (y축은 image coordinate 방향을 따름
-        self.cen_rot = np.round((np.matmul(Rotation, cen_trans)), 0) # 정수로 반올림
+        self.cen_trans = self.car_center - trans
+        self.cen_rot = np.round((np.matmul(Rotation, cen_trans)), 0) 
         self.cen_rotated = self.cen_rot + 2*trans
 
-        self.area1 = (int(self.cen_rotated[0]-crop[0]/2), int(self.cen_rotated[1]-crop[1]/2), int(crop[0]/2), int(crop[1])) # crop할 이미지의 영역
+        self.area1 = (int(self.cen_rotated[0]-crop[0]/2), int(self.cen_rotated[1]-crop[1]/2), int(crop[0]/2), int(crop[1])) 
         self.area2 = (int(self.cen_rotated[0]), int(self.cen_rotated[1]-crop[1]/2), int(crop[0]/2), int(crop[1]))
 
     def stitching(self): #pending
@@ -61,26 +62,25 @@ class SVM:
 
             self.rows, self.cols = self.cv_image0.shape[:2]
             self.M1 = np.float32([[1,0,650],[0,1,600]]) # translation x+650, y+600
-            self.img_trans1 = cv2.warpAffine(self.cv_image0, self.M1, (2*self.cols, 2*self.rows)) # img_trans는 img를 M1만큼 translation시킨 것
-
+            self.img_trans1 = cv2.warpAffine(self.cv_image0, self.M1, (2*self.cols, 2*self.rows)) 
             self.M1 = cv2.getRotationMatrix2D((1300, 1200), self.theta-360, 1) # rotation center is x=1300, y=1200
             self.dst1 = cv2.warpAffine(self.img_trans1, self.M1, (2*self.cols, 2*self.rows))
 
             self.dst1_copy = self.dst1.copy()
-            self.dst1_copy = self.dst1[self.area1[1]:self.area1[1]+self.area1[3], self.area1[0]:self.area1[0]+self.area1[2]] # 앞에께 세로 뒤에께 가로
+            self.dst1_copy = self.dst1[self.area1[1]:self.area1[1]+self.area1[3], self.area1[0]:self.area1[0]+self.area1[2]] 
 
 
 
             self.M2 = np.float32([[1,0,650],[0,1,600]]) # translation x+650, y+600
-            self.img_trans2 = cv2.warpAffine(self.cv_image1, self.M2, (2*self.cols, 2*self.rows)) # img_trans는 img를 M2만큼 translation시킨 것
+            self.img_trans2 = cv2.warpAffine(self.cv_image1, self.M2, (2*self.cols, 2*self.rows)) 
 
             self.M2 = cv2.getRotationMatrix2D((1300, 1200), self.theta-360, 1) # rotation center is x=1300, y=1200
             self.dst2 = cv2.warpAffine(self.img_trans2, self.M2, (2*self.cols, 2*self.rows))
 
             self.dst2_copy = self.dst2.copy()
-            self.dst2_copy = self.dst2[self.area2[1]:self.area2[1]+self.area2[3], self.area2[0]:self.area2[0]+self.area2[2]] # 앞에께 세로 뒤에께 가로
+            self.dst2_copy = self.dst2[self.area2[1]:self.area2[1]+self.area2[3], self.area2[0]:self.area2[0]+self.area2[2]] 
 
-            self.final = cv2.hconcat([self.dst1_copy, self.dst2_copy]) # 이미지 두개 가로로 붙이기
+            self.final = cv2.hconcat([self.dst1_copy, self.dst2_copy]) 
 
             self.final[160:440, 60:240, :] = 0
 
