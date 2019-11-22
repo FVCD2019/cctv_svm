@@ -16,7 +16,7 @@ class Detector:
         self.mean = (0.485,0.456,0.406)
         self.var = (0.229,0.224,0.225)
 
-        self.thresh = 0.4
+        self.thresh = 0.5
         self.scale = 1.1
 
         checkpoint = 'ckpt_30'
@@ -31,8 +31,7 @@ class Detector:
         self.model.cuda()
 
         if checkpoint is not None:
-            print (os.getcwd())
-            checkpoint = torch.load('/home/ryu/catkin_ws/src/FVCD/cctv_svm/script/Deep_detector/checkpoints/%s.pth' % checkpoint)
+            checkpoint = torch.load('/home/siit/catkin_ws/src/cctv_svm/script/Deep_detector/checkpoints/%s.pth' % checkpoint)
             self.model.load_state_dict(checkpoint['model'])
             checkpoint = None
 

@@ -1,5 +1,5 @@
 <launch>
-	<node pkg="cctv_svm"	type="calibration.py"	name="cam_cali" output="screen"/>
-	<node pkg="cctv_svm"	type="IPM.py"	name="ipm" output="screen"/>
+	<node pkg="cctv_svm"	type="calibration_demo.py"	name="cam_cali"/>
+	<node pkg="cctv_svm"	type="IPM_demo.py"	name="ipm"/>
 	<!--node pkg="cctv_svm"    type="stitching.py" name="stitching" output="screen"/-->
 </launch>

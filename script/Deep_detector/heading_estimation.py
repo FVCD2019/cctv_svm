@@ -25,6 +25,7 @@ class CARPOSE:
         self.ego_y = 0.0
         self.ego_heading = 0.0
         self.Det = Detector()
+        print("init end")
 
     def imageCB(self, data):
         try:
@@ -33,7 +34,7 @@ class CARPOSE:
             print(e)
 
     def run(self):
-        while not rospy.is_shutdown:
+        while not rospy.is_shutdown():
             h, w, _ = self.image.shape
             output = self.Det.forward(self.image)
             results = self.Det.post_processing(output)
@@ -45,14 +46,18 @@ class CARPOSE:
                 box = result['rbox']
                 heading = result['heading']
 
+                center_rescale = np.float32([w / 512, h / 512])
+                box_rescale = np.tile(center_rescale, (4, 1))
+
+                center *= center_rescale
+                box *= box_rescale
+
                 self.image = cv2.drawContours(self.image, [box.astype(np.int0)], -1, (0, 255, 0), 3)  # green
                 self.image = cv2.putText(self.image, "(%d,%d) / %d" % (center[0], center[1], heading),
                                 tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                                 (0, 0, 0), thickness=2)
 
-            self.image = cv2.resize(img, (960, 960))
-
-            cv2.imshow("output", self.image[:, :, ::-1])
+            cv2.imshow("output", self.image)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         cv2.destroyAllWindows()
