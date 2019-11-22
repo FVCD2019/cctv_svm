@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="cctv_svm" type="heading_estimation.py" name="car_pose" output="screen"/>
+</launch>

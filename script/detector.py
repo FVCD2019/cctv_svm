@@ -6,7 +6,7 @@ from sklearn.externals import joblib
 #import joblib
 
 """ load KNN classifier """
-classifier = joblib.load('/home/ryu/catkin_ws/src/FVCD/cctv_svm/model/saved_model_python2.pkl')
+classifier = joblib.load('/home/siit/catkin_ws/src/cctv_svm/script/saved_model/saved_model_python2.pkl')
 classes = {0:'Empty',1:'Up',2:'Down'}
 
 
@@ -77,15 +77,15 @@ def Vehicle_Detector(image):
         angle = 360 + angle if angle < 0 else angle
         angle = angle - 360 if angle > 360 else angle
 
-        image = cv2.putText(image, "heading : %d" % (angle), tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), thickness=2)
+        #image = cv2.putText(image, "heading : %d" % (angle), tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), thickness=2)
 
-   return image, rect_list, center_x, center_y, angle
+    return image, rect_list, center_x, center_y, angle
 
 
 def Space_Detector(image, space):
     _image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    empty_sace_ids = []
+    empty_space_ids = []
 
     for idx, s in enumerate(space):
         (x1, y1), (x2, y2) = s
@@ -98,6 +98,6 @@ def Space_Detector(image, space):
         out = classifier.predict(input_x[None, :])
 
         if out[0] == 0:  # 0 means empty , 1 and 2 mean occupy
-            empty_space_ids.append(idx)
+            empty_space_ids.append(idx+1)
 
     return empty_space_ids

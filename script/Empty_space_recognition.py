@@ -15,7 +15,8 @@ class PSPACE:
         print("init")
         rospy.init_node('p_space', anonymous=True)
         self.bridge = CvBridge()
-        self.pspace_pub = rospy.Publisher("p_space_id",Int16MultiArray ,queue_size=1)
+        self.pspace_pub = rospy.Publisher("detector/p_space",Int16MultiArray ,queue_size=1)
+        self.pspace_id_pub = rospy.Publisher("p_space_id",Int16 ,queue_size=1)
         self.image_sub = rospy.Subscriber("/stitch", Image, self.imageCB)
         self.pspace_info = Int16MultiArray()
         self.pspace_info.data = []
@@ -37,16 +38,17 @@ class PSPACE:
 
         """ empty space recognition """
         empty_space_ids = Space_Detector(stitch_image, pre_defined_space)
-        self.ps_id = empty_space_ids+1
-        self.ps_u = pre_defined_space[empty_space_ids][0]
-        self.ps_b = pre_defined_space[empty_space_ids][1]
+        self.ps_id = empty_space_ids[0]
+        self.ps_u = pre_defined_space[self.ps_id][0]
+        self.ps_b = pre_defined_space[self.ps_id][1]
 
-	mx = (self.ps_u[0] + self.ps_b[0]) / 2
-	my = (self.ps_u[0] + self.ps_b[0]) / 2
+        mx = (self.ps_u[0] + self.ps_b[0]) / 2
+        my = (self.ps_u[0] + self.ps_b[0]) / 2
         # this is for local ryu
-        self.pspace_info.data = [self.ps_id, mx, my]
+        self.pspace_info.data = [self.ps_id+1, mx, my]
         print("pub")
-        #self.pspace_pub.publish(self.pspace_info)
+        self.pspace_pub.publish(self.pspace_info)
+        self.pspace_id_pub.publish(self.ps_id+1)
 
 ###########MAIN############
 pspace = PSPACE()
