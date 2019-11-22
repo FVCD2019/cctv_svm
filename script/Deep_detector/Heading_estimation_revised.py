@@ -37,7 +37,7 @@ class CARPOSE:
 
     def run(self):
         while not rospy.is_shutdown:
-            h, w, _ = self.image.shape
+            h, w, _ = self.image.shape 
             output = self.Det.forward(self.image)
             results = self.Det.post_processing(output)
 
