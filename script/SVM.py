@@ -1,93 +1,79 @@
 import numpy as np
 import cv2
 import math
+from PIL import Image
+import random
+import os
+import copy
 import matplotlib.pyplot as plt
-#x1,y1,angle1
-#x2,y2,angle2
-#new_x = (x1+x2)/2
-#new_y = (y1+y2)/2
-#new_angle = (angle1 + angle2)/2
-## Headingangle estimation.py --> heading angle, center point
+
 
 # final image cooridnate
-w, h = 360, 720
-w ,h = w+1, h+1
 
-x = np.arange(h)
-y = np.arange(w)
-X, Y = np.meshgrid(x, y)
-grid_ori = np.array([list(zip(x, y)) for x, y in zip(X, Y)])
-grid_trans = np.array([list(zip(y-w//2, h//2-x)) for x, y in zip(X, Y)])
-
-grid_trans = np.transpose(grid_trans, (1,0,2))
-print(grid_trans.shape)
-print(grid_trans[400, 300])
-
-
-w, h = 360, 720
 k = np.pi/180
+trans = np.array([[650], [600]])
+crop = np.array([[300],[600]]) # the crop size
+car1 = np.array([[679], [351]]) # car center1
+car2 = np.array([[650], [370]]) # car center2
+new_cen = np.array([0,0])
+theta1 = 356 # Heading angle
+theta2 = 356
+Rotation = np.array([[math.cos((360 - theta1)*k), -math.sin((360 - theta1)*k)],[math.sin((360 - theta1)*k), math.cos((360 - theta1)*k)]])
+Rotation2 = np.array([[math.cos((360 - theta2)*k), -math.sin((360 - theta2)*k)],[math.sin((360 - theta2)*k), math.cos((360 - theta2)*k)]])
 
-arr_concat = np.array([np.linspace(-w/2, -w/2, h+1), np.linspace(-h/2, h/2, h+1)])
-temp = np.array([np.linspace(1, 1, h+1), np.linspace(0, 0, h+1)])
-print("Arr:", arr_concat)
-print(arr_concat[1,2])
-new_concat = arr_concat
-for i in range(w):
-    new_concat = np.concatenate([new_concat, arr_concat+temp], axis=1)
-    arr_concat = arr_concat+temp
-    print("new_concat:", new_concat, "i : ", i)
+cen_trans = car1 - trans # translation image 의 중심을 원점(0,0)으로 했을 때 차량 중심의 좌표 (y축은 image coordinate 방향을 따름)
+cen_trans2 = car2 - trans
+print("cen_trans", cen_trans)
 
-print("---------------")
-print(temp)
-print(arr_concat)
-print(new_concat.shape)
-print(new_concat)
-theta = 3 # Heading angle from Headingangle_estimation.py
+cen_rot = np.round((np.matmul(Rotation, cen_trans)), 0) # 정수로 반올림
+cen_rot2 = np.round((np.matmul(Rotation2, cen_trans2)), 0)
 
-Rotation = np.array([[math.cos(theta*k), -math.sin(theta*k)],[math.sin(theta*k), math.cos(theta*k)]])
-car_center = np.zeros((2, (w+1)*(h+1)))
-print(car_center.shape)
+cen_rotated = cen_rot + 2*trans
+cen_rotated2 = cen_rot2 + 2*trans
+area1 = (int(cen_rotated[0]-crop[0]/2), int(cen_rotated[1]-crop[1]/2), int(crop[0]/2), int(crop[1])) # crop할 이미지의 영역
+area2 = (int(cen_rotated2[0]), int(cen_rotated2[1]-crop[1]/2), int(crop[0]/2), int(crop[1]))
+print("crop area1:", area1)
+print("crop area2:", area2)
 
+img1 = cv2.imread("C:\\Users\\user\\Desktop\\ipm0_1120.png") # 1번쨰 카메라 이미지
+plt.imshow(img1)
+plt.show()
+exit()
 
-car_center[0, 0:(w+1)*(h+1)] = 470 # center point x from Headingangle_estimation.py
-car_center[1, 0:(w+1)*(h+1)] = 320 # center point y from Headingangle_estimation.py
-
-new_mat = np.matmul(Rotation, new_concat) + car_center
-print(new_mat)
-new_mat = np.int0(new_mat)
-print("-------------")
-print("original shape :", new_concat.shape) # new_concat 은 x,y coordinate 에서의 좌표값들 할당
-print("new_mat shape:", new_mat.shape) # new_mat 은 변환 후의 이미지 상 coordinate
-print("original :", new_concat)
-print("new_mat:", new_mat)
-
-img = cv2.imread("C:\\Users\\user\\Desktop\\IPM_cam1.jpg") # 1번쨰 카메라 이미지
-img2 = cv2.imread("C:\\Users\\user\\Desktop\\IPM_cam2.jpg") # 2번쨰 카메라 이미지
-temp = cv2.imread("C:\\Users\\user\\Desktop\\IPM_cam1.jpg") # 빈 이미지를 만들기 위한 작업
-w, h = 360, 720
-
-idx = int((h+1)*(w+2)/2)
-print(img.shape)
-bg = cv2.resize(temp, (360, 720), interpolation = cv2.INTER_LINEAR)
-
-print("bg:", bg)
-print("bg.shape:", bg.shape)
-
-print("new_mat:", new_mat)
-print("new_concat:", new_concat)
-
-for i in range(int(w/2)): # cam1 세로로 자른 왼쪽이미지
-    bg[0:h, i,:] = img[new_mat[1, 0:h], new_mat[0, i], :] ## 1, i 는 y좌표, 0, i 는 x좌표
-    print("img y, x, c : ", img[new_mat[1, 0:h], new_mat[0, i]])
-    print("bg :", bg)
-
-for i in range(int(w/2), int(w)): # cam2 세로로 자른 오른쪽 이미지
-    bg[0:h, i,:] = img2[new_mat[1, 0:h], new_mat[0, i], :] ## 1, i 는 y좌표, 0, i 는 x좌표
-    print("img y, x, c : ", img[new_mat[1, 0:h], new_mat[0, i]])
-    print("bg :", bg)
-
-print("bg.shape:", bg.shape)
-cv2.imshow('Final SVM image', bg)
+img2 = cv2.imread("C:\\Users\\user\\Desktop\\ipm1_1120.png") # 2번쨰 카메라 이미지
+img_temp = cv2.imread("C:\\Users\\user\\Desktop\\ipm0_1120.png") # 빈 이미지를 만들기 위한 작업
+'''
+ggg = img1.copy()
+ggg = img1[0:400, 0:1200] # 앞에가 y좌표(100부터 400) 뒤에가 x좌표(100부터 1200)
+cv2.imshow("ggg",ggg)
 cv2.waitKey()
+exit()
+'''
+
+rows, cols = img1.shape[:2]
+M1 = np.float32([[1,0,650],[0,1,600]]) # translation x+650, y+600
+img_trans1 = cv2.warpAffine(img1, M1, (2*cols, 2*rows)) # img_trans는 img를 M1만큼 translation시킨 것
+
+M1 = cv2.getRotationMatrix2D((1300, 1200), theta1-360, 1) # rotation center is x=1300, y=1200
+dst1 = cv2.warpAffine(img_trans1, M1, (2*cols, 2*rows))
+
+dst1_copy = dst1.copy()
+dst1_copy = dst1[area1[1]:area1[1]+area1[3], area1[0]:area1[0]+area1[2]] # 앞에께 세로 뒤에께 가로
 
 
+
+M2 = np.float32([[1,0,650],[0,1,600]]) # translation x+650, y+600
+img_trans2 = cv2.warpAffine(img2, M2, (2*cols, 2*rows)) # img_trans는 img를 M2만큼 translation시킨 것
+
+M2 = cv2.getRotationMatrix2D((1300, 1200), theta2-360, 1) # rotation center is x=1300, y=1200
+dst2 = cv2.warpAffine(img_trans2, M2, (2*cols, 2*rows))
+
+dst2_copy = dst2.copy()
+dst2_copy = dst2[area2[1]:area2[1]+area2[3], area2[0]:area2[0]+area2[2]] # 앞에께 세로 뒤에께 가로
+
+final = cv2.hconcat([dst1_copy, dst2_copy]) # 이미지 두개 가로로 붙이기
+
+final[160:440, 60:240, :] = 0
+
+cv2.imshow("final", final)
+cv2.waitKey()
