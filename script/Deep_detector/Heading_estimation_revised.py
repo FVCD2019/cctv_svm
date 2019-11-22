@@ -83,7 +83,7 @@ class CARPOSE:
                 if(dis_mat[i,i] == min):
                     idx = i
 
-            revised_car_center=np.array([new_mat[0,idx], new_mat[1,idx])
+            revised_car_center=np.array([new_mat[0,idx], new_mat[1,idx]])
 ****************************** pose publish 작성 필요****************************
 
             self.image = cv2.drawContours(self.image, [box.astype(np.int0)], -1, (0, 255, 0), 3)  # green
