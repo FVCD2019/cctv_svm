@@ -16,7 +16,7 @@ class Detector:
         self.mean = (0.485,0.456,0.406)
         self.var = (0.229,0.224,0.225)
 
-        self.thresh = 0.5
+        self.thresh = 0.4
         self.scale = 1.1
 
         checkpoint = 'ckpt_30'

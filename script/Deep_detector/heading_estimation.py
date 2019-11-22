@@ -35,29 +35,39 @@ class CARPOSE:
 
     def run(self):
         while not rospy.is_shutdown():
-            h, w, _ = self.image.shape
-            output = self.Det.forward(self.image)
-            results = self.Det.post_processing(output)
+            img = self.image.copy()
+            img = img[:, :, ::-1]
 
-            self.image = cv2.resize(self.image, (512, 512))
+            h, w, _ = img.shape
+
+            output = self.Det.forward(img)
+            results = self.Det.post_processing(output)
 
             for result in results:
                 center = result['center']
                 box = result['rbox']
                 heading = result['heading']
 
-                center_rescale = np.float32([w / 512, h / 512])
+                center_rescale = np.float32([w/512., h/512.])
                 box_rescale = np.tile(center_rescale, (4, 1))
 
                 center *= center_rescale
                 box *= box_rescale
 
-                self.image = cv2.drawContours(self.image, [box.astype(np.int0)], -1, (0, 255, 0), 3)  # green
-                self.image = cv2.putText(self.image, "(%d,%d) / %d" % (center[0], center[1], heading),
+                img = cv2.drawContours(img.astype(np.uint8), [box.astype(np.int0)], -1, (0, 255, 0), 3)  # green
+                img = cv2.putText(img, "(%d,%d) / %d" % (center[0], center[1], heading),
                                 tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                                 (0, 0, 0), thickness=2)
 
-            cv2.imshow("output", self.image)
+            output = output[0, :, :, 0].cpu().detach().numpy()
+            output = np.clip(output * 255, 0, 255)
+            output = cv2.applyColorMap(output.astype(np.uint8), cv2.COLORMAP_JET)
+
+            output = cv2.resize(output, (512, 512))
+            img = cv2.resize(img, (512, 512))
+
+            result_img = cv2.hconcat([img[:, :, ::-1], output])
+            cv2.imshow("output", result_img)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         cv2.destroyAllWindows()

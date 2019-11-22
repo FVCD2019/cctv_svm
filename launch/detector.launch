@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="cctv_svm" type="heading_estimation.py" name="car_pose" output="screen"/>
+	<node pkg="cctv_svm" type="Empty_space_recognition.py" name="p_space" output="screen"/>
+</launch>
