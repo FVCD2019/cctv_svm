@@ -36,7 +36,7 @@ class DISTORT:
         print("undistort")
         newcameramtx, roi = cv2.getOptimalNewCameraMatrix(K, D, img_size, 1, img_size)
         mapx, mapy = cv2.initUndistortRectifyMap(K, D, None, newcameramtx, img_size, 5)
-
+	r = rospy.Rate(30)
         # loop over frames from the video file stream
         while not rospy.is_shutdown():
             t1 = time.time()
@@ -54,6 +54,7 @@ class DISTORT:
             #cv2.imshow("Frame", dst)
             #if cv2.waitKey(1) & 0xFF == ord('q'):
             #    break
+	    r.sleep()
 
     def run(self):
         #self.undistortion(cam_id0=0)

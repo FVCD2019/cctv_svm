@@ -26,30 +26,21 @@ class IPM:
 
     def ipmCB0(self, data):
         try:
-            cv_image0 = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            self.cv_image0 = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
 
-        ##cv2.imshow("img0", cv_image0)
-        # IPM
-        img_IPM0 = cv2.warpPerspective(cv_image0, self.IPM_matrix_0, (width, height))
-        ##cv2.imshow("img_IPM0", img_IPM0)
-        self.image_pub0.publish(self.bridge.cv2_to_imgmsg(img_IPM0,"bgr8"))
-        # show the frame and update the FPS counter
-        ##cv2.waitKey(3)
-
-
 
     def run(self):
-        print("run")
-        try:
-            rospy.spin()
-        except KeyboardInterrupt:
-            print("Shutting down")
-        cv2.destroyAllWindows()
+	r = rospy.Rate(30)
+        while not rospy.is_shutdown():
+	    img_IPM0 = cv2.warpPerspective(self.cv_image0, self.IPM_matrix_0, (width, height))
+	    self.image_pub0.publish(self.bridge.cv2_to_imgmsg(img_IPM0,"bgr8"))
+	    r.sleep()
+
 
 
 ###########main#
 ipm = IPM()
-time.sleep(1)
+time.sleep(1.5)
 ipm.run()

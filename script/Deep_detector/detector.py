@@ -111,9 +111,9 @@ class Detector:
             if edged.mean() < self.space_thresh:
                 empty_space_id.append([idx, (x1+x2)//2, (y1+y2)//2])
 
-            color = (255, 0, 0) if edged.mean() > self.space_thresh else (0, 255, 0)
+            #color = (255, 0, 0) if edged.mean() > self.space_thresh else (0, 255, 0)
 
-            image = cv2.rectangle(image.astype(np.uint8), (x1, y1), (x2, y2), color, 3)
+            #image = cv2.rectangle(image.astype(np.uint8), (x1, y1), (x2, y2), color, 3)
 
         return (image, empty_space_id[0]) if len(empty_space_id) > 0 else (image, [8, 0, 0])
 
