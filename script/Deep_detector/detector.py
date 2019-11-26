@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import torch
-import os
+from sklearn.externals import joblib
 
 from model import Model
 from utils import get_center_point_contour, perspective_transform
@@ -16,12 +16,24 @@ class Detector:
         self.mean = (0.485,0.456,0.406)
         self.var = (0.229,0.224,0.225)
 
-        self.thresh = 0.4
-        self.scale = 1.1
+        self.thresh = 0.3
+        self.scale = 1.0
+        self.space_thresh = 20
 
-        checkpoint = 'ckpt_30'
+        checkpoint = '/home/siit/Desktop/Deep_detector/checkpoints/ohem_60.pth'
 
         self.load_network(checkpoint)
+        self.ps = np.int0([
+            [[110, 1], [290, 310]],
+            [[294, 1], [470, 310]],
+            [[473, 1], [650, 310]],
+            [[655, 1], [830, 310]],
+            [[835, 1], [1015, 310]],
+            [[111, 816], [290, 1120]],
+            [[294, 816], [470, 1120]],
+            [[475, 816], [655, 1120]]
+        ])
+
 
     def load_network(self, checkpoint=None):
         print("load network...")
@@ -31,7 +43,7 @@ class Detector:
         self.model.cuda()
 
         if checkpoint is not None:
-            checkpoint = torch.load('/home/siit/catkin_ws/src/cctv_svm/script/Deep_detector/checkpoints/%s.pth' % checkpoint)
+            checkpoint = torch.load(checkpoint)
             self.model.load_state_dict(checkpoint['model'])
             checkpoint = None
 
@@ -83,3 +95,25 @@ class Detector:
                              "heading" : heading})
 
         return results
+
+    def space_recognition(self, image):
+        _image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+        empty_space_id = []
+
+        for idx, s in enumerate(self.ps):
+            (x1, y1), (x2, y2) = s
+            space_crop = _image[y1:y2, x1:x2]
+            space_crop = cv2.resize(space_crop, (40, 80))
+
+            edged = cv2.Canny(space_crop, 50, 80)
+
+            if edged.mean() < self.space_thresh:
+                empty_space_id.append([idx, (x1+x2)//2, (y1+y2)//2])
+
+            color = (255, 0, 0) if edged.mean() > self.space_thresh else (0, 255, 0)
+
+            image = cv2.rectangle(image.astype(np.uint8), (x1, y1), (x2, y2), color, 3)
+
+        return (image, empty_space_id[0]) if len(empty_space_id) > 0 else (image, [8, 0, 0])
+

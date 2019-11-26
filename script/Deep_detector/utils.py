@@ -134,4 +134,3 @@ def heading_classifier(mask_vehicle_crop):
     bottom_mask = mask_vehicle_crop[m_h//2:, :].sum()
 
     return True if up_mask < bottom_mask else False
-

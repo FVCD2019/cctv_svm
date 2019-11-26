@@ -41,6 +41,7 @@ class PSPACE:
 
             """ empty space recognition """
             empty_space_ids = Space_Detector(self.stitch_image, pre_defined_space)
+	    print(empty_space_ids)
             self.ps_id = empty_space_ids[0]
             self.ps_u = pre_defined_space[self.ps_id][0]
             self.ps_b = pre_defined_space[self.ps_id][1]
