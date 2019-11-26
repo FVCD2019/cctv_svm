@@ -57,8 +57,10 @@ class CARPOSE:
             img, empty_space = self.Det.space_recognition(img)
             
             (Pid, center_x, center_y) = empty_space
-            center_x = 1300 - center_x
+            center_x = center_x
+            center_y = center_y
             self.pspace_info.data = [Pid, center_x, center_y]
+	    #self.pspace_info.data = [Pid, center_y, center_x]
             self.pspace_pub.publish(self.pspace_info)
             self.pspace_id_pub.publish(Pid)
 
@@ -76,8 +78,10 @@ class CARPOSE:
                 center *= center_rescale
                 box *= box_rescale
 
-                center[0] = 1300 - center[0]
+                center[0] = center[0]
+                center[1] = 1200 - center[1]
 		self.pose_info.data = [center[0], center[1], heading]
+		#self.pose_info.data = [center[1], center[0], heading]
 		self.pose_pub.publish(self.pose_info)
 
                 img = cv2.drawContours(img.astype(np.uint8), [box.astype(np.int0)], -1, (0, 0, 255), 3)  # green

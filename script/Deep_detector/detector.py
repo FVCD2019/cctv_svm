@@ -18,7 +18,7 @@ class Detector:
 
         self.thresh = 0.3
         self.scale = 1.0
-        self.space_thresh = 20
+        self.space_thresh = 25
 
         checkpoint = '/home/siit/Desktop/Deep_detector/checkpoints/ohem_60.pth'
 
