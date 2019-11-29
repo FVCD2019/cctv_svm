@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="cctv_svm" type="heading_estimation.py" name="Detector" output="screen"/>
+	<node pkg="cctv_svm" type="SVM_port_backup1.py" name="svm" output="screen"/>
+</launch>

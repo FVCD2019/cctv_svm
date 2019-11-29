@@ -1,19 +1,30 @@
+
+from collections import namedtuple
+
 import torch
 import torch.nn as nn
+import torch.nn.init as init
+from torchvision import models
 import torch.nn.functional as F
+
+import torch
+import torch.nn as nn
 
 try:
     from torch.hub import load_state_dict_from_url
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
+torch.backends.cudnn.enabled = True
+torch.backends.cudnn.benchmark = True
 
 __all__ = [
-    'ShuffleNetV2', 'shufflenet_v2_x0_5', 'shufflenet_v2_x1_0',
+    'ShuffleNetV2', 'shufflenet_v2_x0_5', 'shufflenet_v2_x1_0','shufflenetv2_x0.0',
     'shufflenet_v2_x1_5', 'shufflenet_v2_x2_0'
 ]
 
 model_urls = {
+    'shufflenetv2_x0.0': None,
     'shufflenetv2_x0.5': 'https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth',
     'shufflenetv2_x1.0': 'https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth',
     'shufflenetv2_x1.5': None,
@@ -168,14 +179,49 @@ def shufflenet_v2_x0_5(pretrained=False, progress=True, **kwargs):
                          [4, 8, 4], [24, 48, 96, 192, 1024], **kwargs)
 
 
-#=======================================================================================================================
+def shufflenet_v2_x0_0(pretrained=False, progress=True, **kwargs):
+    """
+    Constructs a ShuffleNetV2 with 1.0x output channels, as described in
+    `"ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design"
+    <https://arxiv.org/abs/1807.11164>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _shufflenetv2('shufflenetv2_x0.0', pretrained, progress,
+                         [4, 8, 4], [16, 32, 64, 128, 256], **kwargs)
 
+
+def shufflenet_v2_x1_5(pretrained=False, progress=True, **kwargs):
+    """
+    Constructs a ShuffleNetV2 with 1.5x output channels, as described in
+    `"ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design"
+    <https://arxiv.org/abs/1807.11164>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _shufflenetv2('shufflenetv2_x1.5', pretrained, progress,
+                         [4, 8, 4], [24, 176, 352, 704, 1024], **kwargs)
+
+
+def shufflenet_v2_x2_0(pretrained=False, progress=True, **kwargs):
+    """
+    Constructs a ShuffleNetV2 with 2.0x output channels, as described in
+    `"ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design"
+    <https://arxiv.org/abs/1807.11164>`_.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _shufflenetv2('shufflenetv2_x2.0', pretrained, progress,
+                         [4, 8, 4], [24, 244, 488, 976, 2048], **kwargs)
 
 class single_conv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(single_conv, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1, bias=False, groups=out_ch),
+            nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1, bias=False, groups=out_ch//2),
             nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True)
         )
@@ -183,7 +229,7 @@ class single_conv(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         return x
-
+    
 
 class Model(torch.nn.Module):
     def __init__(self, pretrained=True):
@@ -192,44 +238,116 @@ class Model(torch.nn.Module):
 
         self.conv1 = shufflenet_pretrained_features.conv1
         self.maxpool = shufflenet_pretrained_features.maxpool
-
+        
         self.stage2 = shufflenet_pretrained_features.stage2
         self.stage3 = shufflenet_pretrained_features.stage3
         self.stage4 = shufflenet_pretrained_features.stage4
-
+        
         self.conv5 = shufflenet_pretrained_features.conv5
-
+        
         self.up_conv1 = single_conv(1024, 128)
         self.up_conv2 = single_conv(128, 64)
         self.up_conv3 = single_conv(64, 32)
-
-        self.head = nn.Conv2d(32, 1, kernel_size=1, bias=False)
-
+        self.up_conv4 = single_conv(32, 16)
+        
+        #self.head = nn.Conv2d(32, 1, kernel_size=1, bias=False)
+        self.head = nn.Conv2d(16, 1, kernel_size=1, bias=False)
+        
+        self.sigmoid = nn.Sigmoid()
+        
         nn.init.normal_(self.head.weight.data, mean=0, std=0.01)
-
+        
+        
     def forward(self, x):
         x = self.conv1(x)
         x = self.maxpool(x)
-
+        
         x = self.stage2(x)
         x = self.stage3(x)
         x = self.stage4(x)
         x = self.conv5(x)
-
+        
         h, w = x.size()[2:]
-
+        
         """ connection 0 """
         x = self.up_conv1(x)
-        x = F.interpolate(x, size=(h * 2, w * 2), mode='bilinear', align_corners=False)
-
+        x = F.interpolate(x, size=(h*2, w*2), mode='bilinear', align_corners=False)
+        
         """ connection 1 """
         x = self.up_conv2(x)
-        x = F.interpolate(x, size=(h * 4, w * 4), mode='bilinear', align_corners=False)
-
+        x = F.interpolate(x, size=(h*4, w*4), mode='bilinear', align_corners=False)
+        
         """ connection 2 """
         x = self.up_conv3(x)
-        x = F.interpolate(x, size=(h * 8, w * 8), mode='bilinear', align_corners=False)
+        x = F.interpolate(x, size=(h*8, w*8), mode='bilinear', align_corners=False)
+        
+        """ connection 3 """
+        x = self.up_conv4(x)
+        x = F.interpolate(x, size=(h*16, w*16), mode='bilinear', align_corners=False)
+        
+        x = self.head(x)
+        #x = self.sigmoid(x)
 
+        return x.permute(0, 2, 3, 1)
+
+
+class Model_light(torch.nn.Module):
+    def __init__(self, pretrained=False):
+        super(Model_light, self).__init__()
+        shufflenet_pretrained_features = shufflenet_v2_x0_0(pretrained=pretrained)
+
+        self.conv1 = shufflenet_pretrained_features.conv1
+        self.maxpool = shufflenet_pretrained_features.maxpool
+        
+        self.stage2 = shufflenet_pretrained_features.stage2
+        self.stage3 = shufflenet_pretrained_features.stage3
+        self.stage4 = shufflenet_pretrained_features.stage4
+        
+        self.up_conv1 = single_conv(128, 64)
+        self.up_conv2 = single_conv(64, 32)
+        self.up_conv3 = single_conv(32, 16)
+        
+        self.head = nn.Conv2d(16, 1, kernel_size=1, bias=False)
+        
+        self.sigmoid = nn.Sigmoid()
+        
+        nn.init.normal_(self.head.weight.data, mean=0, std=0.01)
+        
+        
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.maxpool(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        x = self.stage4(x)
+        
+        h, w = x.size()[2:]
+        
+        """ connection 0 """
+        x = self.up_conv1(x)
+        x = F.interpolate(x, size=(h*2, w*2), mode='bilinear', align_corners=False)
+        
+        """ connection 1 """
+        x = self.up_conv2(x)
+        x = F.interpolate(x, size=(h*4, w*4), mode='bilinear', align_corners=False)
+        
+        """ connection 2 """
+        x = self.up_conv3(x)
+        x = F.interpolate(x, size=(h*8, w*8), mode='bilinear', align_corners=False)
+        
         x = self.head(x)
 
         return x.permute(0, 2, 3, 1)
+
+    
+if __name__ == '__main__':
+    #model = models.shufflenet_v2_x0_5(pretrained=True)
+    model = Model_light()
+    
+    print(model)
+    
+    output = model(torch.randn(1, 3, 224, 224))
+
+    print(output.shape)
+    
+

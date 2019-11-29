@@ -31,7 +31,14 @@ def get_center_point_contour(output, thresh, scale):
                 rbox_width, rbox_height = rbox_height, rbox_width
                 rect_angle += 90
 
-            rect = ((rbox_x * 4, rbox_y * 4), (rbox_width * scale * 4, rbox_height * scale * 4), rect_angle)
+            if rbox_y < height//2:
+                scale_factor_h = (height-rbox_y)/height/10+1
+                scale_factor_w = 1 / ((width-rbox_x)/width/50+1)
+            else:
+                scale_factor_h = 1 / ((height-rbox_y)/height/10+1)
+                scale_factor_w = (width-rbox_x)/width/50+1
+
+            rect = ((scale_factor_w*rbox_x * 2, scale_factor_h*rbox_y*2), (rbox_width * scale * 2, rbox_height * scale * 2), rect_angle)
 
             box = cv2.boxPoints(rect)
 
@@ -41,9 +48,10 @@ def get_center_point_contour(output, thresh, scale):
 
 
 def get_ipm_matrix():
-    width, height = 1000, 1000
+    width, height = 1300, 1200
 
-    src_pts = np.float32([[660, 170], [1400, 200], [1400, 937], [622, 933]])
+    #src_pts = np.float32([[660, 170], [1400, 200], [1400, 937], [622, 933]])
+    src_pts = np.float32([(0, 0), (width, 0), (width, height), (0, height)])
     dst_pts = np.float32([(0, 0), (width, 0), (width, height), (0, height)])
 
     IPM_matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
@@ -51,10 +59,11 @@ def get_ipm_matrix():
     return IPM_matrix
 
 
-def perspective_transform(img, IPM_matrix, width=1000, height=1000):
-    img_IPM = cv2.warpPerspective(img, IPM_matrix, (width, height))
+def perspective_transform(img, IPM_matrix, width=1300, height=1200):
+    img_cuda = cv2.UMat(img)
+    img_IPM = cv2.warpPerspective(img_cuda, IPM_matrix, (width, height))
 
-    return img_IPM
+    return img_IPM.get()
 
 
 def vehicle_crop(image, mask, rect):
@@ -130,7 +139,17 @@ def heading_classifier(mask_vehicle_crop):
 
     m_h, m_w = mask_vehicle_crop.shape
 
-    up_mask = mask_vehicle_crop[:m_h//2, :].sum()
-    bottom_mask = mask_vehicle_crop[m_h//2:, :].sum()
+    up_mask = mask_vehicle_crop[:m_h//2, :].max()
+    bottom_mask = mask_vehicle_crop[m_h//2:, :].max()
 
     return True if up_mask < bottom_mask else False
+
+
+def distance(p1, p2):
+    if p2 is None:
+        return 0
+    x1, y1 = p1
+    x2, y2 = p2
+
+    return np.sqrt( (x2-x1)**2 + (y2-y1)**2 )
+

@@ -1,28 +1,26 @@
 import cv2
 import numpy as np
 import torch
-from sklearn.externals import joblib
 
 from model import Model
-from utils import get_center_point_contour, perspective_transform
-from utils import vehicle_mask_crop
-
+from utils import vehicle_mask_crop, get_center_point_contour
 from torch.autograd import Variable
+
 
 class Detector:
     def __init__(self):
-        self.input_size = (512, 512)
-        self.out_size = (512//4, 512//4)
+        self.input_size = (384, 384)
+        self.out_size = (384//2, 384//2)
         self.mean = (0.485,0.456,0.406)
         self.var = (0.229,0.224,0.225)
 
         self.thresh = 0.3
         self.scale = 1.0
-        self.space_thresh = 25
+        self.ps_thresh = 25
 
-        checkpoint = '/home/siit/Desktop/Deep_detector/checkpoints/ohem_60.pth'
-
+        checkpoint = "/home/siit/Desktop/Deep_detector/checkpoints/416_mse_70.pth"
         self.load_network(checkpoint)
+
         self.ps = np.int0([
             [[110, 1], [290, 310]],
             [[294, 1], [470, 310]],
@@ -97,23 +95,33 @@ class Detector:
         return results
 
     def space_recognition(self, image):
-        _image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
         empty_space_id = []
+
+        _image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
         for idx, s in enumerate(self.ps):
             (x1, y1), (x2, y2) = s
             space_crop = _image[y1:y2, x1:x2]
+
             space_crop = cv2.resize(space_crop, (40, 80))
 
             edged = cv2.Canny(space_crop, 50, 80)
 
-            if edged.mean() < self.space_thresh:
-                empty_space_id.append([idx, (x1+x2)//2, (y1+y2)//2])
+            if edged.mean() < self.ps_thresh:
+                empty_space_id.append( [idx, (x1+x2)/2, (y1+y2)/2] )
 
-            #color = (255, 0, 0) if edged.mean() > self.space_thresh else (0, 255, 0)
+        return empty_space_id if len(empty_space_id) != 0 else [[8, 0, 0]]
 
-            #image = cv2.rectangle(image.astype(np.uint8), (x1, y1), (x2, y2), color, 3)
 
-        return (image, empty_space_id[0]) if len(empty_space_id) > 0 else (image, [8, 0, 0])
+    def draw_parking_space(self, image, space_id):
+        space_id = [idx[0] for idx in space_id ]
 
+        for idx, s in enumerate(self.ps):
+            (x1, y1), (x2, y2) = s
+
+            color = (0, 255, 0) if idx in space_id else (255, 0, 0)
+      
+            image = cv2.rectangle(image, (x1, y1), (x2, y2), color, 3)
+
+        return image
+      
