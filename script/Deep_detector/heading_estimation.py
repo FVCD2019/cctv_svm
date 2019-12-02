@@ -32,7 +32,7 @@ class CARPOSE:
         self.Det = Detector()
 
         self.img_w, self.img_h = 1300, 1200
-        self.center_rescale = np.float32([self.img_w/384., self.img_h/384.])
+        self.center_rescale = np.float32([self.img_w/512., self.img_h/512.])
         self.box_rescale = np.tile(self.center_rescale, (4, 1))
         self.prev_center = None
         print("init end")
@@ -88,18 +88,19 @@ class CARPOSE:
                 box *= self.box_rescale
 
                 if distance(center, self.prev_center) > 100:  # tracking using distance of center point
-                    continue
+                    if (count-1) % 30 == 0 and len(results) == 1:  # periodically update
+                        pass
+                    else:
+                        continue
 
                 self.prev_center = center.copy()
 
-                center[0] = center[0]
-                center[1] = 1200 - center[1]
-		self.pose_info.data = [center[0], center[1], heading]
-		#self.pose_info.data = [center[1], center[0], heading]
+		self.pose_info.data = [center[0], 1200 - center[1], heading]
 		self.pose_pub.publish(self.pose_info)
 
                 img = cv2.drawContours(img.astype(np.uint8), [box.astype(np.int0)], -1, (0, 0, 255), 3)  # green
-                img = cv2.circle(img, (int(center[0]), int(1200-center[1])), 10, (0,0,255), -1)
+                img = cv2.circle(img, (int((box[0][0]+box[2][0])/2), int((box[0][1]+box[2][1])/2)), 10, (0, 0, 255), -1)
+                img = cv2.circle(img, (int(center[0]), int(center[1])), 10, (255, 255, 0), -1)
                 img = cv2.putText(img, "(%d,%d) / %d" % (center[0], center[1], heading),
                                 tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                                 (0, 0, 0), thickness=2)

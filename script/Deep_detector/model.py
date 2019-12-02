@@ -250,7 +250,6 @@ class Model(torch.nn.Module):
         self.up_conv3 = single_conv(64, 32)
         self.up_conv4 = single_conv(32, 16)
         
-        #self.head = nn.Conv2d(32, 1, kernel_size=1, bias=False)
         self.head = nn.Conv2d(16, 1, kernel_size=1, bias=False)
         
         self.sigmoid = nn.Sigmoid()
@@ -286,7 +285,7 @@ class Model(torch.nn.Module):
         x = F.interpolate(x, size=(h*16, w*16), mode='bilinear', align_corners=False)
         
         x = self.head(x)
-        #x = self.sigmoid(x)
+        x = F.interpolate(x, size=(h*32, w*32), mode='bilinear', align_corners=False)
 
         return x.permute(0, 2, 3, 1)
 

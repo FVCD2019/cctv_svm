@@ -9,8 +9,8 @@ from torch.autograd import Variable
 
 class Detector:
     def __init__(self):
-        self.input_size = (384, 384)
-        self.out_size = (384//2, 384//2)
+        self.input_size = (512, 512)
+        self.out_size = (512//1, 512//1)
         self.mean = (0.485,0.456,0.406)
         self.var = (0.229,0.224,0.225)
 
@@ -18,7 +18,9 @@ class Detector:
         self.scale = 1.0
         self.ps_thresh = 25
 
-        checkpoint = "/home/siit/Desktop/Deep_detector/checkpoints/416_mse_70.pth"
+        #checkpoint = 'checkpoints/scalex4_512_maskv5_mse_1e4/ckpt_50.pth'
+        #checkpoint = "checkpoints/416_mse_70.pth"
+        checkpoint = "/home/siit/catkin_ws/src/cctv_svm/script/Deep_detector/checkpoints/512_x4_mse_70.pth"
         self.load_network(checkpoint)
 
         self.ps = np.int0([
@@ -68,6 +70,7 @@ class Detector:
         x = self.pre_processing(img)
 
         out = self.model(x)
+        torch.cuda.synchronize()
 
         return out
 
@@ -84,11 +87,10 @@ class Detector:
 
         for offset in offsets:
             box = offset['rbox']
-            (cx, cy) = offset['rect'][0]
 
             heading = vehicle_mask_crop(out, offset['rect'])
 
-            results.append({"center" : (cx, cy),
+            results.append({"center" : offset['center'],
                              "rbox" : box,
                              "heading" : heading})
 
