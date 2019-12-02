@@ -16,7 +16,7 @@ class Detector:
 
         self.thresh = 0.3
         self.scale = 1.0
-        self.ps_thresh = 25
+        self.ps_thresh = 20
 
         #checkpoint = 'checkpoints/scalex4_512_maskv5_mse_1e4/ckpt_50.pth'
         #checkpoint = "checkpoints/416_mse_70.pth"

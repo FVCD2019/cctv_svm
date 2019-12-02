@@ -9,13 +9,14 @@ def get_center_point_contour(output, thresh, scale):
 
     results = []
 
+    scale = 1.
     nLabels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
 
-    thresh_x = 400./1300.*width*1.
-    thresh_y = 800./1200.*height*1.
+    thresh_x = 400./1300.*width*scale
+    thresh_y = 800./1200.*height*scale
 
-    scale_factor_x = lambda x: x-((x-thresh_x)/30.) if x>thresh_x else x+((thresh_x-x)/30.)
-    scale_factor_y = lambda y: y-((y-thresh_y)/30.) if y>thresh_y else y+((thresh_y-y)/30.)
+    scale_factor_x = lambda x: x-((x-thresh_x)/10.) if x>thresh_x else x+((thresh_x-x)/10.)
+    scale_factor_y = lambda y: y-((y-thresh_y)/40.) if y>thresh_y else y+((thresh_y-y)/40.)
 
     for k in range(1, nLabels):
         #size = stats[k, cv2.CC_STAT_AREA]
@@ -33,9 +34,9 @@ def get_center_point_contour(output, thresh, scale):
 
             (rbox_x, rbox_y), (rbox_width, rbox_height), rect_angle = rect
 
-            center = (scale_factor_x(rbox_x*1.), scale_factor_y(rbox_y*1.)) 
+            center = (scale_factor_x(rbox_x*scale), scale_factor_y(rbox_y*scale)) 
 
-            rect = ((rbox_x * 1., rbox_y * 1.), (rbox_width * scale * 1., rbox_height * scale * 1.), rect_angle)
+            rect = ((rbox_x * scale, rbox_y * scale), (rbox_width * scale * scale, rbox_height * scale * scale), rect_angle)
 
             box = cv2.boxPoints(rect)
 
