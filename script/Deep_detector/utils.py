@@ -15,7 +15,7 @@ def get_center_point_contour(output, thresh, scale):
     thresh_x = 400./1300.*width*scale
     thresh_y = 800./1200.*height*scale
 
-    scale_factor_x = lambda x: x-((x-thresh_x)/10.) if x>thresh_x else x+((thresh_x-x)/10.)
+    scale_factor_x = lambda x: x-((x-thresh_x)/30.) if x>thresh_x else x+((thresh_x-x)/30.)
     scale_factor_y = lambda y: y-((y-thresh_y)/40.) if y>thresh_y else y+((thresh_y-y)/40.)
 
     for k in range(1, nLabels):
@@ -140,8 +140,8 @@ def heading_classifier(mask_vehicle_crop):
 
     m_h, m_w = mask_vehicle_crop.shape
 
-    up_mask = mask_vehicle_crop[:m_h//2, :].mean()
-    bottom_mask = mask_vehicle_crop[m_h//2:, :].mean()
+    up_mask = mask_vehicle_crop[:m_h//2, :].sum()
+    bottom_mask = mask_vehicle_crop[m_h//2:, :].sum()
 
     return True if up_mask < bottom_mask else False
 

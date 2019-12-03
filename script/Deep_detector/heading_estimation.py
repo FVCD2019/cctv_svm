@@ -37,6 +37,8 @@ class CARPOSE:
         self.box_rescale = np.tile(self.center_rescale, (4, 1))
         self.prev_center = None
         self.pprev_center = None
+        self.prev_heading = None
+
         print("init end")
 
 
@@ -71,7 +73,7 @@ class CARPOSE:
             if count < 5:
                 empty_space = self.Det.space_recognition(img)
         
-            #img = self.Det.draw_parking_space(img, empty_space)
+            img = self.Det.draw_parking_space(img, empty_space)
 
             (Pid, center_x, center_y) = empty_space[0]
             center_x = center_x
@@ -109,10 +111,18 @@ class CARPOSE:
                 if self.pprev_center is None:
                     self.pprev_center = self.prev_center.copy()
 
+                if self.prev_heading is None:
+                    self.prev_heading = heading
+
                 center[0] = int(alpha * center[0] + (alpha-0.25)* self.prev_center[0] + (alpha-0.25)* self.pprev_center[0])
                 center[1] = int(alpha * center[1] + (alpha-0.25)* self.prev_center[1] + (alpha-0.25)* self.pprev_center[1])
                 self.prev_center = center.copy()
                 self.pprev_center = self.prev_center.copy()
+                
+                if np.abs(self.prev_heading-heading) < 200 and np.abs(self.prev_heading-heading) > 160:
+                    heading = self.prev_heading
+
+                self.prev_heading = heading
 
 		self.pose_info.data = [center[0], 1200 - center[1], heading]
 		self.pose_pub.publish(self.pose_info)
@@ -120,7 +130,7 @@ class CARPOSE:
                 #img = cv2.drawContours(img.astype(np.uint8), [box.astype(np.int0)], -1, (0, 0, 255), 3)  # green
                 #img = cv2.circle(img, (int((box[0][0]+box[2][0])/2), int((box[0][1]+box[2][1])/2)), 10, (0, 0, 255), -1)
                 #img = cv2.circle(img, (int(center[0]), int(center[1])), 10, (255, 255, 0), -1)
-                #img = cv2.putText(img, "(%d,%d) / %d" % (center[0], center[1], heading),
+                #img = cv2.putText(img, "(%03d,%03d) / %03d" % (center[0], center[1], heading),
                 #                tuple(box[2]), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                 #                (0, 0, 0), thickness=2)
 
