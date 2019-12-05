@@ -15,8 +15,8 @@ def get_center_point_contour(output, thresh, scale):
     thresh_x = 400./1300.*width*scale
     thresh_y = 800./1200.*height*scale
 
-    scale_factor_x = lambda x: x-((x-thresh_x)/30.) if x>thresh_x else x+((thresh_x-x)/30.)
-    scale_factor_y = lambda y: y-((y-thresh_y)/40.) if y>thresh_y else y+((thresh_y-y)/40.)
+    scale_factor_x = lambda x: x-((x-thresh_x)**2/3000.) if x>thresh_x else x+((thresh_x-x)**2/3000.)
+    scale_factor_y = lambda y: y-((y-thresh_y)**2/3000.) if y>thresh_y else y+((thresh_y-y)**2/3000.)
 
     for k in range(1, nLabels):
         #size = stats[k, cv2.CC_STAT_AREA]
@@ -146,11 +146,11 @@ def heading_classifier(mask_vehicle_crop):
     return True if up_mask < bottom_mask else False
 
 
-def distance(p1, p2):
+def distance(p1, p2, alpha=1.0):
     if p2 is None:
         return 0
     x1, y1 = p1
     x2, y2 = p2
 
-    return np.sqrt( (x2-x1)**2 + (y2-y1)**2 )
+    return np.sqrt( alpha*((x2-x1)**2) + (y2-y1)**2 )
 

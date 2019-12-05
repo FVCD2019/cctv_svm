@@ -17,7 +17,7 @@ class IPM:
         self.image_pub0 = rospy.Publisher("ipm0",Image,queue_size=1)
         self.image_sub0 = rospy.Subscriber("/distort_cam0", Image, self.ipmCB0)
 
-        self.src_pts0 = np.float32([[753, 163], [747, 344], [737, 644], [731, 834], [1272, 185], [1274, 357], [1064, 650], [1061, 838]])
+        self.src_pts0 = np.float32([[751, 158], [746, 340], [736, 641], [732, 830], [1272, 180], [1274, 353], [1065, 646], [1061, 834]])
         self.dst_pts = np.float32([[111, 5], [111, 315], [111, 815], [111, 1125], [1011, 5], [1011, 315], [651, 815], [651, 1125]])
         
 	#self.IPM_matrix = [cv2.getPerspectiveTransform(self.src_pts[n-1], self.dst_pts) for n in range(1, 5)]

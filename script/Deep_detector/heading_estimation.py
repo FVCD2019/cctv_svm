@@ -22,6 +22,7 @@ class CARPOSE:
         self.pspace_pub = rospy.Publisher("detector/p_space",Int16MultiArray ,queue_size=1)
         self.pspace_id_pub = rospy.Publisher("p_space_id",Int16 ,queue_size=1)
         self.distance = rospy.Publisher("car_dis",Int16 ,queue_size=1)
+        self.parking_distance = rospy.Publisher("goal_dis",Int16 ,queue_size=1)
         self.image_sub = rospy.Subscriber("/ipm0", Image, self.imageCB)
         self.pspace_info = Int16MultiArray()
         self.pspace_info.data = []
@@ -72,6 +73,8 @@ class CARPOSE:
             #if (count-1) % 300 == 0:
             if count < 5:
                 empty_space = self.Det.space_recognition(img)
+                parking_center = empty_space[0][1:]
+		print("parking_center : ", parking_center)
         
             img = self.Det.draw_parking_space(img, empty_space)
 
@@ -95,6 +98,8 @@ class CARPOSE:
                 center *= self.center_rescale
                 box *= self.box_rescale
 
+                parking_dist = distance(center, parking_center, alpha=0.3)
+
 		dis = distance(center, self.prev_center)
 
                 if dis > 100:  # tracking using distance of center point
@@ -104,6 +109,7 @@ class CARPOSE:
                         continue
 		
 		self.distance.publish(int(dis))
+		self.parking_distance.publish(int(parking_dist))
 
                 if self.prev_center is None:
                     self.prev_center = center.copy()
